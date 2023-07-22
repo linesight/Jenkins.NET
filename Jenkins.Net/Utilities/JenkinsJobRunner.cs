@@ -119,7 +119,7 @@ namespace JenkinsNET.Utilities
             return Process(jobName, buildResult, queueStartTime);
         }
 
-    #if NET_ASYNC
+#if NET_ASYNC
         /// <summary>
         /// Run the Job asynchronously.
         /// </summary>
@@ -142,17 +142,18 @@ namespace JenkinsNET.Utilities
 
             return await ProcessAsync(jobName, buildResult, queueStartTime);
         }
-    #endif
+#endif
 
         /// <summary>
         /// Run the Job with parameters.
         /// </summary>
         /// <param name="jobName">The name of the Job to run.</param>
         /// <param name="jobParameters">The parameters used to start the Job.</param>
+        /// <param name="jobFileParameters">The parameters used to start the Job.</param>
         /// <exception cref="JenkinsNetException"></exception>
         /// <exception cref="JenkinsJobBuildException"></exception>
         /// <exception cref="JenkinsJobGetBuildException"></exception>
-        public JenkinsBuildBase RunWithParameters(string jobName, IDictionary<string, string> jobParameters)
+        public JenkinsBuildBase RunWithParameters(string jobName, IDictionary<string, string> jobParameters, IDictionary<string, string> jobFileParameters=null)
         {
             if (isJobStarted) throw new JenkinsNetException("This JobRunner instance has already been started! Separate JenkinsJobRunner instances are required to run multiple jobs.");
             isJobStarted = true;
@@ -160,7 +161,7 @@ namespace JenkinsNET.Utilities
             SetStatus(JenkinsJobStatus.Pending);
             var queueStartTime = DateTime.Now;
 
-            var buildResult = Client.Jobs.BuildWithParameters(jobName, jobParameters);
+            var buildResult = Client.Jobs.BuildWithParameters(jobName, jobParameters, jobFileParameters);
 
             if (buildResult == null)
                 throw new JenkinsJobBuildException("An empty build response was returned!");
@@ -168,16 +169,17 @@ namespace JenkinsNET.Utilities
             return Process(jobName, buildResult, queueStartTime);
         }
 
-    #if NET_ASYNC
+#if NET_ASYNC
         /// <summary>
         /// Run the Job asynchronously with parameters.
         /// </summary>
         /// <param name="jobName">The name of the Job to run.</param>
         /// <param name="jobParameters">The parameters used to start the Job.</param>
+        /// <param name="jobFileParameters">The parameters used to start the Job.</param>
         /// <exception cref="JenkinsNetException"></exception>
         /// <exception cref="JenkinsJobBuildException"></exception>
         /// <exception cref="JenkinsJobGetBuildException"></exception>
-        public async Task<JenkinsBuildBase> RunWithParametersAsync(string jobName, IDictionary<string, string> jobParameters)
+        public async Task<JenkinsBuildBase> RunWithParametersAsync(string jobName, IDictionary<string, string> jobParameters, IDictionary<string, string> jobFileParameters=null)
         {
             if (isJobStarted) throw new JenkinsNetException("This JobRunner instance has already been started! Separate JenkinsJobRunner instances are required to run multiple jobs.");
             isJobStarted = true;
@@ -185,14 +187,14 @@ namespace JenkinsNET.Utilities
             SetStatus(JenkinsJobStatus.Pending);
             var queueStartTime = DateTime.Now;
 
-            var buildResult = await Client.Jobs.BuildWithParametersAsync(jobName, jobParameters);
+            var buildResult = await Client.Jobs.BuildWithParametersAsync(jobName, jobParameters, jobFileParameters);
 
             if (buildResult == null)
                 throw new JenkinsJobBuildException("An empty build response was returned!");
 
             return await ProcessAsync(jobName, buildResult, queueStartTime);
         }
-    #endif
+#endif
 
         /// <exception cref="JenkinsNetException"></exception>
         /// <exception cref="JenkinsJobBuildException"></exception>

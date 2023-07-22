@@ -41,7 +41,7 @@ namespace JenkinsNET
             }
         }
 
-    #if NET_ASYNC
+#if NET_ASYNC
         /// <summary>
         /// Enqueues a Job to be built.
         /// </summary>
@@ -59,18 +59,19 @@ namespace JenkinsNET
                 throw new JenkinsJobBuildException($"Failed to build Jenkins Job '{jobName}'!", error);
             }
         }
-    #endif
+#endif
 
         /// <summary>
         /// Enqueues a Job with parameters to be built.
         /// </summary>
         /// <param name="jobName">The name of the Job.</param>
         /// <param name="jobParameters">The collection of parameters for building the job.</param>
+        /// <param name="jobFileParameters">The collection of file parameters for building the job.</param>
         /// <exception cref="JenkinsJobBuildException"></exception>
-        public JenkinsBuildResult BuildWithParameters(string jobName, IDictionary<string, string> jobParameters)
+        public JenkinsBuildResult BuildWithParameters(string jobName, IDictionary<string, string> jobParameters, IDictionary<string, string> jobFileParameters=null)
         {
             try {
-                var cmd = new JobBuildWithParametersCommand(context, jobName, jobParameters);
+                var cmd = new JobBuildWithParametersCommand(context, jobName, jobParameters, jobFileParameters);
                 cmd.Run();
                 return cmd.Result;
             }
@@ -79,7 +80,7 @@ namespace JenkinsNET
             }
         }
 
-    #if NET_ASYNC
+#if NET_ASYNC
         /// <summary>
         /// Enqueues a Job with parameters to be built.
         /// </summary>
@@ -87,10 +88,10 @@ namespace JenkinsNET
         /// <param name="jobParameters">The collection of parameters for building the job.</param>
         /// <param name="token">An optional token for aborting the request.</param>
         /// <exception cref="JenkinsJobBuildException"></exception>
-        public async Task<JenkinsBuildResult> BuildWithParametersAsync(string jobName, IDictionary<string, string> jobParameters, CancellationToken token = default)
+        public async Task<JenkinsBuildResult> BuildWithParametersAsync(string jobName, IDictionary<string, string> jobParameters, IDictionary<string, string> jobFileParameters, CancellationToken token = default)
         {
             try {
-                var cmd = new JobBuildWithParametersCommand(context, jobName, jobParameters);
+                var cmd = new JobBuildWithParametersCommand(context, jobName, jobParameters, jobFileParameters);
                 await cmd.RunAsync(token);
                 return cmd.Result;
             }
@@ -98,7 +99,7 @@ namespace JenkinsNET
                 throw new JenkinsJobBuildException($"Failed to build Jenkins Job '{jobName}'!", error);
             }
         }
-    #endif
+#endif
 
         /// <summary>
         /// Gets a Job description from Jenkins.

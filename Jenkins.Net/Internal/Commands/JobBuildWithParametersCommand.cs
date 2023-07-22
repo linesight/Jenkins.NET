@@ -10,7 +10,7 @@ namespace JenkinsNET.Internal.Commands
     {
         public JenkinsBuildResult Result {get; internal set;}
 
-        public JobBuildWithParametersCommand(IJenkinsContext context, string jobName, IDictionary<string, string> jobParameters)
+        public JobBuildWithParametersCommand(IJenkinsContext context, string jobName, IDictionary<string, string> jobParameters, IDictionary<string, string> jobFileParameters=null)
         {
             if (context == null)
                 throw new ArgumentNullException(nameof(context));
@@ -25,6 +25,8 @@ namespace JenkinsNET.Internal.Commands
                 ["delay"] = "0sec",
             };
 
+
+
             var query = new StringWriter();
             WriteJobParameters(query, _params);
 
@@ -35,6 +37,40 @@ namespace JenkinsNET.Internal.Commands
 
             OnWrite = request => {
                 request.Method = "POST";
+                if (jobFileParameters != null)
+                {
+                    string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
+                    byte[] boundaryBytes = System.Text.Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
+
+                    request.ContentType = "multipart/form-data; boundary=" + boundary;
+                    request.KeepAlive = true;
+
+                    using (Stream requestStream = request.GetRequestStream())
+                    {
+                        foreach (KeyValuePair<string, string> pair in jobFileParameters)
+                        {
+
+                            requestStream.Write(boundaryBytes, 0, boundaryBytes.Length);
+
+                            string header = "Content-Disposition: form-data; name=\"" + pair.Key + "\"; filename=\"" + pair.Value + "\r\n\r\n";
+                            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(header);
+                            requestStream.Write(bytes, 0, bytes.Length);
+                            byte[] buffer = new byte[32768];
+                            int bytesRead;
+                            using (FileStream fileStream = File.OpenRead(pair.Value))
+                            {
+                                while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) != 0)
+                                    requestStream.Write(buffer, 0, bytesRead);
+                            }
+
+                        }
+
+                        byte[] footer = System.Text.Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
+                        requestStream.Write(footer, 0, footer.Length);
+                    }
+
+
+                }
             };
 
             OnRead = response => {
